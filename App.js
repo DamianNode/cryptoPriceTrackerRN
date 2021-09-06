@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useRef, useMemo, useCallback } from 'react';
 import { FlatList, StyleSheet, Text, View, SafeAreaView } from 'react-native';
 import ListItem from './components/ListItem';
+import { BottomSheetModal, BottomSheetModalProvider } from '@gorhom/bottom-sheet';
 
 import { SAMPLE_DATA } from './assets/data/sampleData';
 
@@ -14,23 +15,47 @@ const ListHeader = () => (
 )
 
 export default function App() {
+  const bottomSheetModalRef = useRef(null);
+  const snapPoints = useMemo(() => ['50%'], []);
+
+  const handlePresentModalPress = useCallback(
+    () => {
+      bottomSheetModalRef.current?.present();
+    }, [],
+  )
+
   return (
-    <SafeAreaView  style={styles.container}>
-      <FlatList
-        keyExtractor={(item) => item.id}
-        data={SAMPLE_DATA}
-        renderItem={({ item }) => (
-          <ListItem 
-            name={item.name} 
-            symbol={item.symbol} 
-            currentPrice={item.current_price}
-            priceChangePercentage7d={item.price_change_percentage_7d_in_currency} 
-            logoUrl={item.image}   
-          />
-        )}
-        ListHeaderComponent={ListHeader}
-      />
-    </SafeAreaView>
+    <BottomSheetModalProvider>
+      <SafeAreaView  style={styles.container}>
+        <FlatList
+          keyExtractor={(item) => item.id}
+          data={SAMPLE_DATA}
+          renderItem={({ item }) => (
+            <ListItem 
+              name={item.name} 
+              symbol={item.symbol} 
+              currentPrice={item.current_price}
+              priceChangePercentage7d={item.price_change_percentage_7d_in_currency} 
+              logoUrl={item.image}
+              onPress={handlePresentModalPress}   
+            />
+          )}
+          ListHeaderComponent={ListHeader}
+        />
+      </SafeAreaView>
+
+      <BottomSheetModal
+        ref={bottomSheetModalRef}
+        index={0}
+        snapPoints={snapPoints}
+        style={styles.bottomSheet}
+      >
+        <View style={styles.contentContainer}>
+          <Text>Awesome 🚀</Text>
+        </View>
+
+      </BottomSheetModal>
+    </BottomSheetModalProvider>
   );
 }
 
@@ -52,5 +77,15 @@ const styles = StyleSheet.create({
     backgroundColor: '#A9ABB1',
     marginHorizontal: 16,
     marginTop: 16,
+  },
+  bottomSheet: {
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: -4,
+    },
+    shadowOpacity: .25,
+    shadowRadius: 4,
+    elevation: 5,
   }
 });
