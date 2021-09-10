@@ -1,21 +1,32 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Dimensions, View, Text, StyleSheet, Image } from 'react-native';
 import { ChartDot, ChartPath, ChartPathProvider, ChartYLabel } from '@rainbow-me/animated-charts';
+import { useSharedValue } from 'react-native-reanimated';
 
 export const {width: SIZE} = Dimensions.get('window');
 
 const Chart = ({name, symbol, currentPrice, priceChangePercentage7d, logoUrl, sparkline}) => {
+    const latestCurrentPrice = useSharedValue(currentPrice);
+    const [chartReady, setChartReady] = useState(false);
     const priceChangeColor = priceChangePercentage7d > 0 ? '#34C759' : '#FF3B30';
 
     const formatUSD = value => {
         'worklet';
         if (value === '') {
-            return `$${currentPrice.toLocaleString('en-US', { currency: 'USD' })}`;
+            return `$${latestCurrentPrice.value.toLocaleString('en-US', { currency: 'USD' })}`;
         }
 
         const formatedValue = `$${parseFloat(value).toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,')}`
         return formatedValue;
     };
+
+    useEffect(() => {
+        latestCurrentPrice.value = currentPrice;
+
+        setTimeout(() => {
+            setChartReady(true);
+        }, 0)
+    }, [currentPrice])
 
     return (
         <ChartPathProvider data={{ points: sparkline, smoothingStrategy: 'bezier' }}>
@@ -39,10 +50,13 @@ const Chart = ({name, symbol, currentPrice, priceChangePercentage7d, logoUrl, sp
                     </View>
                 </View>
 
-                <View style={styles.chartLineWrapper}>
+                {chartReady && (
+                    <View style={styles.chartLineWrapper}>
                     <ChartPath height={SIZE / 2} stroke="black" width={SIZE} />
                     <ChartDot style={{ backgroundColor: 'black' }} />
                 </View>
+                )}
+
             </View>
         </ChartPathProvider>
     )
